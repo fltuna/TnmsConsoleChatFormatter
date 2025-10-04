@@ -1,0 +1,17 @@
+{
+    ">>Pudding Multigames Ver:1.0.6 <<":
+    {
+        "en": "{white}Replaced Text 1",
+        "ja": "{white}置き換えられたテキスト 1"
+    },
+    "->Map by Tenshi. & Akatsuki. Texture help by Color":
+    {
+        "en": "{green}Replaced Text 2",
+        "ja": "{green}置き換えられたテキスト 2"
+    },
+    "->Type \"snd_musicvolume 0\"(range 0.0-1.0) in console to close music or change volume":
+    {
+        "en": "{blue}Replaced Text 3",
+        "ja": "{blue}置き換えられたテキスト 3"
+    }
+}
