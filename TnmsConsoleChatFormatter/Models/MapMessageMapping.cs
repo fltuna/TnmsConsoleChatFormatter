@@ -4,6 +4,6 @@ public class MapMessageMapping(string mapName, Dictionary<string, Dictionary<str
 {
     public string MapName { get; } = mapName;
 
-    // Dic["lang"]["replace text"] = "replaced text"
+    // Dic["replace text"]["lang"] = "replaced text"
     public Dictionary<string, Dictionary<string, string>> MessagesToReplace { get; } = messagesToReplace;
 }
