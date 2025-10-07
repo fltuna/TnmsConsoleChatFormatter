@@ -1,6 +1,7 @@
 ﻿using TnmsPluginFoundation.Models.Plugin;
 using System.Text.Json;
 using TnmsConsoleChatFormatter.Models;
+using TnmsPluginFoundation.Utils.UI.Chat;
 
 namespace TnmsConsoleChatFormatter.Modules;
 
@@ -47,6 +48,15 @@ public class MapConfigurationParser(string configFilePath)
         if (configData == null)
         {
             throw new InvalidOperationException("Failed to parse configuration file");
+        }
+        
+        foreach (var (key, dictionary) in configData)
+        {
+            foreach (var (s, value) in dictionary)
+            {
+                dictionary[s] = ChatColorUtil.FormatChatMessage(value);
+            }
+            configData[key] = dictionary;
         }
 
         var mapName = Path.GetFileNameWithoutExtension(configFilePath);

@@ -5,7 +5,6 @@ using Sharp.Shared.Listeners;
 using TnmsConsoleChatFormatter.Models;
 using TnmsPluginFoundation.Extensions.Client;
 using TnmsPluginFoundation.Models.Plugin;
-using TnmsPluginFoundation.Utils.UI.Chat;
 
 namespace TnmsConsoleChatFormatter.Modules;
 
@@ -45,6 +44,7 @@ public class LocalizedConsoleChatFormatter(IServiceProvider serviceProvider) : P
     {
         if (_mapMessageMappings.TryGetValue(Plugin.SharedSystem.GetModSharp().GetMapName() ?? string.Empty , out var msgMapping))
         {
+            long initialAllocatedBytes = GC.GetAllocatedBytesForCurrentThread();
             foreach (var gameClient in SharedSystem.GetModSharp().GetIServer().GetGameClients())
             {
                 if (gameClient.IsFakeClient || gameClient.IsHltv)
@@ -62,15 +62,22 @@ public class LocalizedConsoleChatFormatter(IServiceProvider serviceProvider) : P
                 {
                     if (messagesToReplace.TryGetValue(clientLang.TwoLetterISOLanguageName, out var translatedMsg) && !string.IsNullOrEmpty(translatedMsg))
                     {
-                        controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {ChatColorUtil.FormatChatMessage(translatedMsg)}");
+                        controller.PrintToChat(string.Concat(LocalizeString(gameClient, "Console.ChatPrefix"), " ", translatedMsg));
+                        // controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {translatedMsg}");
                         continue;
                     }
                 }
-                controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {message}");
+                controller.PrintToChat(string.Concat(LocalizeString(gameClient, "Console.ChatPrefix"), " ", message));
+                // controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {message}");
             }
+            long currentAllocatedBytes = GC.GetAllocatedBytesForCurrentThread();
+            long allocationsSinceInitial = currentAllocatedBytes - initialAllocatedBytes;
+
+            Console.WriteLine($"Map localization allocations since initial check: {allocationsSinceInitial} bytes");
             return ECommandAction.Stopped;
         }
 
+        long initialAllocatedBytesConsoleChat = GC.GetAllocatedBytesForCurrentThread();
         foreach (var gameClient in SharedSystem.GetModSharp().GetIServer().GetGameClients())
         {
             if (gameClient.IsFakeClient || gameClient.IsHltv)
@@ -83,6 +90,10 @@ public class LocalizedConsoleChatFormatter(IServiceProvider serviceProvider) : P
         
             controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {message}");
         } 
+        long currentAllocatedBytesConsoleChat = GC.GetAllocatedBytesForCurrentThread();
+        long allocationsSinceInitialConsoleChat = currentAllocatedBytesConsoleChat - initialAllocatedBytesConsoleChat;
+
+        Console.WriteLine($"Map localization allocations since initial check: {allocationsSinceInitialConsoleChat} bytes");
 
         return ECommandAction.Stopped;
     }
