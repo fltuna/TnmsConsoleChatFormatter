@@ -24,10 +24,16 @@ public class TnmsConsoleChatFormatter(
     public override string PluginPrefix => "[TNMSCCF]";
     public override bool UseTranslationKeyInPluginPrefix => false;
 
+    private LocalizedConsoleChatFormatter _registered = null!;
 
     protected override void TnmsOnPluginLoad(bool hotReload)
     {
-        var registered = RegisterModule<LocalizedConsoleChatFormatter>();
-        SharedSystem.GetModSharp().InstallGameListener(registered);
+        _registered = RegisterModule<LocalizedConsoleChatFormatter>();
+        SharedSystem.GetModSharp().InstallGameListener(_registered);
+    }
+
+    protected override void TnmsOnPluginUnload(bool hotReload)
+    {
+        SharedSystem.GetModSharp().RemoveGameListener(_registered);
     }
 }
