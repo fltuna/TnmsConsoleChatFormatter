@@ -44,7 +44,6 @@ public class LocalizedConsoleChatFormatter(IServiceProvider serviceProvider) : P
     {
         if (_mapMessageMappings.TryGetValue(Plugin.SharedSystem.GetModSharp().GetMapName() ?? string.Empty , out var msgMapping))
         {
-            long initialAllocatedBytes = GC.GetAllocatedBytesForCurrentThread();
             foreach (var gameClient in SharedSystem.GetModSharp().GetIServer().GetGameClients())
             {
                 if (gameClient.IsFakeClient || gameClient.IsHltv)
@@ -62,18 +61,12 @@ public class LocalizedConsoleChatFormatter(IServiceProvider serviceProvider) : P
                 {
                     if (messagesToReplace.TryGetValue(clientLang.TwoLetterISOLanguageName, out var translatedMsg) && !string.IsNullOrEmpty(translatedMsg))
                     {
-                        controller.PrintToChat(string.Concat(LocalizeString(gameClient, "Console.ChatPrefix"), " ", translatedMsg));
-                        // controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {translatedMsg}");
+                        controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {translatedMsg}");
                         continue;
                     }
                 }
-                controller.PrintToChat(string.Concat(LocalizeString(gameClient, "Console.ChatPrefix"), " ", message));
-                // controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {message}");
+                controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {message}");
             }
-            long currentAllocatedBytes = GC.GetAllocatedBytesForCurrentThread();
-            long allocationsSinceInitial = currentAllocatedBytes - initialAllocatedBytes;
-
-            Console.WriteLine($"Map localization allocations since initial check: {allocationsSinceInitial} bytes");
             return ECommandAction.Stopped;
         }
 
