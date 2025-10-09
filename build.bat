@@ -50,6 +50,9 @@ set DLLS_TO_REMOVE=Google.Protobuf.dll McMaster.NETCore.Plugins.dll Microsoft.Ex
 REM Define Shared DLLs to remove from TnmsPluginFoundation.Example (these are provided by shared directory)
 set SHARED_DLLS_TO_REMOVE=
 
+REM Define custom directories to copy from main project to build output (these are only copied when %MOD_SHARP_DIR% is set)
+set CUSTOM_DIRS=lang maps
+
 echo Building shared projects (Phase 1 - Base projects)...
 for %%P in (%SHARED_PROJECTS_PHASE1%) do (
     if exist "%%P\%%P.csproj" (
@@ -167,10 +170,11 @@ for %%P in (%PROJECTS%) do (
         if exist ".build\modules\%%P\appsettings.json" move ".build\modules\%%P\appsettings.json" ".build\modules\%%P\appsettings.example.json"
         
         REM Copy custom files that defined
-        for %%C in (%CUSTOM_DIRS%) do (
+        for %%C in (!CUSTOM_DIRS!) do (
             if exist "%%C\" (
                 echo Copying %%C files for %%P...
-                if exist "%%C\" xcopy "%%C\*" ".build/modules/%%P/%%C/" /E /I /Y
+                echo .build\modules\%%P\%%C\
+                xcopy "%%C\*" ".build\modules\%%P\%%C\" /E /I /Y
             )
         )
         
