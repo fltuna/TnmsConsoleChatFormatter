@@ -8,7 +8,7 @@ using TnmsPluginFoundation.Models.Plugin;
 
 namespace TnmsConsoleChatFormatter.Modules;
 
-public class LocalizedConsoleChatFormatter(IServiceProvider serviceProvider) : PluginModuleBase(serviceProvider), IGameListener
+public class LocalizedConsoleChatFormatter(IServiceProvider serviceProvider, bool hotReload) : PluginModuleBase(serviceProvider, hotReload), IGameListener
 {
     public override string PluginModuleName => "LocalizedConsoleChatFormatter";
     public override string ModuleChatPrefix => "TNMSCCF";
