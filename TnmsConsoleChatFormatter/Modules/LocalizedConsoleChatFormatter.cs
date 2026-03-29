@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Collections.Frozen;
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using Sharp.Shared.Enums;
 using Sharp.Shared.Listeners;
@@ -16,10 +17,10 @@ public class LocalizedConsoleChatFormatter(IServiceProvider serviceProvider, boo
 
     public int ListenerVersion => 1;
     public int ListenerPriority => 1;
-    
+
     private CultureInfo _defaultCulture = CultureInfo.GetCultureInfo("en-US");
-    
-    private Dictionary<string, MapMessageMapping> _mapMessageMappings = new(StringComparer.OrdinalIgnoreCase);
+
+    private FrozenDictionary<string, MapMessageMapping> _mapMessageMappings = FrozenDictionary<string, MapMessageMapping>.Empty;
 
     protected override void OnInitialize()
     {
@@ -42,7 +43,8 @@ public class LocalizedConsoleChatFormatter(IServiceProvider serviceProvider, boo
 
     public ECommandAction ConsoleSay(string message)
     {
-        if (_mapMessageMappings.TryGetValue(Plugin.SharedSystem.GetModSharp().GetMapName() ?? string.Empty , out var msgMapping))
+        if (_mapMessageMappings.TryGetValue(Plugin.SharedSystem.GetModSharp().GetMapName() ?? string.Empty, out var msgMapping)
+            && msgMapping.MessagesToReplace.TryGetValue(message, out var messagesToReplace))
         {
             foreach (var gameClient in SharedSystem.GetModSharp().GetIServer().GetGameClients())
             {
@@ -50,43 +52,36 @@ public class LocalizedConsoleChatFormatter(IServiceProvider serviceProvider, boo
                     continue;
 
                 var controller = gameClient.GetPlayerController();
-            
+
                 if (controller == null)
                     continue;
 
                 var clientLang = Plugin.Localizer.GetClientCulture(gameClient);
 
-                
-                if (msgMapping.MessagesToReplace.TryGetValue(message, out var messagesToReplace))
+                if (messagesToReplace.TryGetValue(clientLang.TwoLetterISOLanguageName, out var translatedMsg) && !string.IsNullOrEmpty(translatedMsg))
                 {
-                    if (messagesToReplace.TryGetValue(clientLang.TwoLetterISOLanguageName, out var translatedMsg) && !string.IsNullOrEmpty(translatedMsg))
-                    {
-                        controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {translatedMsg}");
-                        continue;
-                    }
+                    controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {translatedMsg}");
                 }
-                controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {message}");
+                else
+                {
+                    controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {message}");
+                }
             }
             return ECommandAction.Stopped;
         }
 
-        long initialAllocatedBytesConsoleChat = GC.GetAllocatedBytesForCurrentThread();
         foreach (var gameClient in SharedSystem.GetModSharp().GetIServer().GetGameClients())
         {
             if (gameClient.IsFakeClient || gameClient.IsHltv)
                 continue;
 
             var controller = gameClient.GetPlayerController();
-        
+
             if (controller == null)
                 continue;
-        
-            controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {message}");
-        } 
-        long currentAllocatedBytesConsoleChat = GC.GetAllocatedBytesForCurrentThread();
-        long allocationsSinceInitialConsoleChat = currentAllocatedBytesConsoleChat - initialAllocatedBytesConsoleChat;
 
-        Console.WriteLine($"Map localization allocations since initial check: {allocationsSinceInitialConsoleChat} bytes");
+            controller.PrintToChat($"{LocalizeString(gameClient, "Console.ChatPrefix")} {message}");
+        }
 
         return ECommandAction.Stopped;
     }

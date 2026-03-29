@@ -1,9 +1,11 @@
-﻿namespace TnmsConsoleChatFormatter.Models;
+﻿using System.Collections.Frozen;
 
-public class MapMessageMapping(string mapName, Dictionary<string, Dictionary<string, string>> messagesToReplace)
+namespace TnmsConsoleChatFormatter.Models;
+
+public class MapMessageMapping(string mapName, FrozenDictionary<string, FrozenDictionary<string, string>> messagesToReplace)
 {
     public string MapName { get; } = mapName;
 
     // Dic["replace text"]["lang"] = "replaced text"
-    public Dictionary<string, Dictionary<string, string>> MessagesToReplace { get; } = messagesToReplace;
+    public FrozenDictionary<string, FrozenDictionary<string, string>> MessagesToReplace { get; } = messagesToReplace;
 }

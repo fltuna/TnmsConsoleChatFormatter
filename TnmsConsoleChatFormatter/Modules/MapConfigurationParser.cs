@@ -1,4 +1,4 @@
-﻿using TnmsPluginFoundation.Models.Plugin;
+﻿using System.Collections.Frozen;
 using System.Text.Json;
 using TnmsConsoleChatFormatter.Models;
 using TnmsPluginFoundation.Utils.UI.Chat;
@@ -7,17 +7,17 @@ namespace TnmsConsoleChatFormatter.Modules;
 
 public class MapConfigurationParser(string configFilePath)
 {
-    public static Dictionary<string, MapMessageMapping> LoadAllMapConfigurations(string mapsDirectory)
+    public static FrozenDictionary<string, MapMessageMapping> LoadAllMapConfigurations(string mapsDirectory)
     {
         var mapMessageMappings = new Dictionary<string, MapMessageMapping>();
-        
+
         if (!Directory.Exists(mapsDirectory))
         {
-            return mapMessageMappings;
+            return mapMessageMappings.ToFrozenDictionary();
         }
 
         var jsonFiles = Directory.GetFiles(mapsDirectory, "*.json");
-        
+
         foreach (var jsonFile in jsonFiles)
         {
             try
@@ -31,8 +31,8 @@ public class MapConfigurationParser(string configFilePath)
                 // Ignore invalid files
             }
         }
-        
-        return mapMessageMappings;
+
+        return mapMessageMappings.ToFrozenDictionary();
     }
 
     private MapMessageMapping Parse()
@@ -44,22 +44,25 @@ public class MapConfigurationParser(string configFilePath)
 
         var jsonContent = File.ReadAllText(configFilePath);
         var configData = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(jsonContent);
-        
+
         if (configData == null)
         {
             throw new InvalidOperationException("Failed to parse configuration file");
         }
-        
+
         foreach (var (key, dictionary) in configData)
         {
             foreach (var (s, value) in dictionary)
             {
                 dictionary[s] = ChatColorUtil.FormatChatMessage(value);
             }
-            configData[key] = dictionary;
         }
 
         var mapName = Path.GetFileNameWithoutExtension(configFilePath);
-        return new MapMessageMapping(mapName, configData);
+        var frozenMessages = configData.ToFrozenDictionary(
+            kvp => kvp.Key,
+            kvp => kvp.Value.ToFrozenDictionary()
+        );
+        return new MapMessageMapping(mapName, frozenMessages);
     }
 }
